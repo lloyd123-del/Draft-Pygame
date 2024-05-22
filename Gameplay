@@ -1,0 +1,74 @@
+import pygame
+import random
+
+pygame.init()
+
+def gameplay():
+    brown = (150, 75, 0)
+    white = (255, 255, 255)
+
+    width, height = 1200, 700
+
+    screen = pygame.display.set_mode((width, height))
+    pygame.display.set_caption("Sample dragging / gameplay")
+
+
+
+    active_box = None
+    boxes = []
+    for i in range(5): # Number 5 means number of boxes displayed
+
+        # Kaning numbers kay position sa boxes
+        # busa duha ka number, ang tawag ana range
+        # Since nag gamit tag random mag base sya sa range nimo nga 50, 700 mura ra syag mamili between 50 - 700 para sa x or y position sa box
+        x = random.randint(50, 700)
+        y = random.randint(50, 700)
+
+        # Kaning numbers kay kadak on sa boxes
+        # busa duha ka number, ang tawag ana range
+        # Since nag gamit tag random mag base sya sa range nimo nga 35, 50 same logic sa x ug y pos
+
+        w = random.randint(35, 35)
+        h = random.randint(35, 35)
+        box = pygame.Rect(x, y, w, h)
+        boxes.append(box)
+
+          # Ang naa sa sulod sa parenthesis ana kay default usage
+        # (x_pos, y_pos, Width, height) Mao ni ang default setting
+
+ trash_bins = pygame.image.load("basurahan.png")
+    trash_bins = pygame.transform.scale(trash_bins, (400, 300))
+
+    running = True
+    while running:
+
+        screen.fill(white)
+        pos = pygame.mouse.get_pos()
+
+        for box in boxes:
+            pygame.draw.rect(screen,  brown, box)
+
+        for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:    # 1 means left mouse button # If 0 means middle click # If 2 kay right click
+                    for num, box in enumerate(boxes):  # For loop to access the list
+                        if box.collidepoint(event.pos):
+                            active_box = num
+
+            if event.type == pygame.MOUSEBUTTONUP:
+                if event.button == 1:
+                    active_box = None
+
+            if event.type == pygame.MOUSEMOTION:
+
+                # noinspection PyUnboundLocalVariable
+                if active_box != None:
+                    boxes[active_box].move_ip(event.rel)
+
+            if event.type == pygame.QUIT:
+                running = False
+
+        screen.blit(trash_bins, (450, 400))
+        pygame.display.flip() # Mura ranig pygame.update() Gina update niya events sa imong pygame codes para mu display sa screen
+
+    pygame.quit()

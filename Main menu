@@ -1,0 +1,62 @@
+import pygame
+from Button import Button
+from Gameplay import gameplay
+
+# Initialize Pygame
+pygame.init()
+
+# Screen dimensions
+screen_width = 1280
+screen_height = 720
+screen = pygame.display.set_mode((screen_width, screen_height))
+pygame.display.set_caption("Main Menu")
+
+# Load images
+main_menu_BG = pygame.image.load("background.png")
+play_image = pygame.image.load("Play.png")
+exit_image = pygame.image.load("Exit.png")
+
+# Resize images
+new_width = 200
+new_height = 100
+play_image = pygame.transform.scale(play_image, (new_width, new_height))
+exit_image = pygame.transform.scale(exit_image, (new_width, new_height))
+
+main_menu_BG = pygame.transform.scale(main_menu_BG, (screen_width, screen_height))
+
+# Button positions
+play_button_x = 365
+play_button_y = 400
+exit_button_x = 720
+exit_button_y = 400
+
+# Button instances
+play_button = Button(play_image, play_button_x, play_button_y)
+exit_button = Button(exit_image, exit_button_x, exit_button_y)
+
+# Main loop
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+
+    # Update button state para ma update tong changes sa image
+    play_button.update()
+    exit_button.update()
+
+    # Draw everything
+    screen.blit(main_menu_BG, (0, 0)) # Kaning (0, 0) kay position na sa image
+    screen.blit(play_button.image, play_button.rect)
+    screen.blit(exit_button.image, exit_button.rect)
+    pygame.display.flip()
+
+    if play_button.check_clicked_button(screen):
+          gameplay()
+                    # This part is pag call ug function to display the gameplay screen
+
+
+    if exit_button.check_clicked_button(screen):
+        running = False
+
+pygame.quit()

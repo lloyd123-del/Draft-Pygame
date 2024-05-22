@@ -1,0 +1,46 @@
+import pygame
+
+BLACK = (0, 0, 0)
+
+pygame.init()
+
+class Button:
+    def __init__(self, image, x_pos, y_pos):
+        self.default_image = image
+        self.hover_image = self.change_image_color(image, BLACK)  # Hover color
+        self.image = self.default_image
+        self.rect = self.image.get_rect(topleft=(x_pos, y_pos))  # Kaning topleft kay para sa assigned na position,
+                                                                 # so kay topleft man ang na assign, atong coordinates
+                                                                 # sa x_pos and y_pos is mag base sa topleft corner sa rectangle
+                                                                 # If center then mag base and x ug y pos sa center sa rectangle
+        self.x_pos = x_pos
+        self.y_pos = y_pos
+        self.clicked = False
+
+    def change_image_color(self, image, color):
+        # Create a copy of the image and fill it with specified color
+        new_image = image.copy()
+        new_image.fill(color, None, pygame.BLEND_RGBA_MULT)
+        return new_image
+
+    def update(self):
+
+        if self.rect.collidepoint(pygame.mouse.get_pos()):
+            self.image = self.hover_image
+        else:
+            self.image = self.default_image
+
+    def check_clicked_button(self, screen):
+        action = False
+        pos = pygame.mouse.get_pos()
+
+        # Check clicked mouse
+        if self.rect.collidepoint(pos):
+            if pygame.mouse.get_pressed()[0] == 1 and self.clicked == False:
+                self.clicked = True
+                action = True
+            if pygame.mouse.get_pressed()[0] == 0:
+                self.clicked = False
+
+        screen.blit(self.image, (self.rect.x, self.rect.y))
+        return action

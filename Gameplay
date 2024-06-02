@@ -3,72 +3,94 @@ import random
 
 pygame.init()
 
+# Load and scale the background
+background = pygame.image.load('images/background.png')
+background = pygame.transform.scale(background, (1200, 700))
+
+class IdleChara:
+    def __init__(self):
+        self.sprites = [
+            pygame.image.load(f'images/idle_character/{i + 1}.png')
+            for i in range(10)
+        ]
+
+        # Resize the idle character sprites
+        self.sprites = [pygame.transform.scale(sprite, (300, 300)) for sprite in self.sprites]
+
+        self.current_sprite = 0
+        self.image = self.sprites[self.current_sprite]
+        self.rect = self.image.get_rect(topleft=(-20, 400))
+
+        self.frame_counter = 0
+        self.frame_delay = 15
+
+    def update(self):
+        self.frame_counter += 1
+        if self.frame_counter >= self.frame_delay:
+            self.frame_counter = 0
+            self.current_sprite += 1
+            if self.current_sprite >= len(self.sprites):
+                self.current_sprite = 0
+            self.image = self.sprites[self.current_sprite]
+
+def trash_image(num_trashes, image_path, scale_size):
+    trashes = []
+    for _ in range(num_trashes):
+        image = pygame.image.load(image_path)
+        image = pygame.transform.scale(image, scale_size)
+        x = random.randint(50, 1000)
+        y = random.randint(50, 500)
+        rect = image.get_rect(topleft=(x, y))
+        trashes.append((image, rect))
+    return trashes
+
 def gameplay():
-    brown = (150, 75, 0)
-    white = (255, 255, 255)
-
     width, height = 1200, 700
-
     screen = pygame.display.set_mode((width, height))
     pygame.display.set_caption("Sample dragging / gameplay")
 
+    active_trash = None
+    residual_trashes = trash_image(1, 'images/plastic_bottle.png', (60, 60))
+    plastic_trashes = trash_image(1, 'images/plastic_bottle.png', (60, 60))
+    bio_trashes = trash_image(1, 'images/plastic_bottle.png', (60, 60))
 
-
-    active_box = None
-    boxes = []
-    for i in range(5): # Number 5 means number of boxes displayed
-
-        # Kaning numbers kay position sa boxes
-        # busa duha ka number, ang tawag ana range
-        # Since nag gamit tag random mag base sya sa range nimo nga 50, 700 mura ra syag mamili between 50 - 700 para sa x or y position sa box
-        x = random.randint(50, 700)
-        y = random.randint(50, 700)
-
-        # Kaning numbers kay kadak on sa boxes
-        # busa duha ka number, ang tawag ana range
-        # Since nag gamit tag random mag base sya sa range nimo nga 35, 50 same logic sa x ug y pos
-
-        w = random.randint(35, 35)
-        h = random.randint(35, 35)
-        box = pygame.Rect(x, y, w, h)
-        boxes.append(box)
-
-          # Ang naa sa sulod sa parenthesis ana kay default usage
-        # (x_pos, y_pos, Width, height) Mao ni ang default setting
-
- trash_bins = pygame.image.load("basurahan.png")
-    trash_bins = pygame.transform.scale(trash_bins, (400, 300))
+    character = IdleChara()
 
     running = True
     while running:
-
-        screen.fill(white)
-        pos = pygame.mouse.get_pos()
-
-        for box in boxes:
-            pygame.draw.rect(screen,  brown, box)
-
         for event in pygame.event.get():
+            pos = pygame.mouse.get_pos()
+
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:    # 1 means left mouse button # If 0 means middle click # If 2 kay right click
-                    for num, box in enumerate(boxes):  # For loop to access the list
-                        if box.collidepoint(event.pos):
-                            active_box = num
+                if event.button == 1:
+                    for trash_list in [residual_trashes, plastic_trashes, bio_trashes]:
+                        for image, rect in trash_list:
+                            if rect.collidepoint(event.pos):
+                                active_trash = rect
 
             if event.type == pygame.MOUSEBUTTONUP:
                 if event.button == 1:
-                    active_box = None
+                    active_trash = None
 
             if event.type == pygame.MOUSEMOTION:
-
-                # noinspection PyUnboundLocalVariable
-                if active_box != None:
-                    boxes[active_box].move_ip(event.rel)
+                if active_trash:
+                    active_trash.move_ip(event.rel)
 
             if event.type == pygame.QUIT:
                 running = False
 
-        screen.blit(trash_bins, (450, 400))
-        pygame.display.flip() # Mura ranig pygame.update() Gina update niya events sa imong pygame codes para mu display sa screen
+        screen.blit(background, (0, 0))
+
+        for image, rect in residual_trashes + plastic_trashes + bio_trashes:
+            screen.blit(image, rect)
+
+        character.update()
+        screen.blit(character.image, character.rect)
+
+        pygame.display.flip()
 
     pygame.quit()
+
+# Run gameplay function if this script is executed directly
+if __name__ == "__main__":
+    gameplay()

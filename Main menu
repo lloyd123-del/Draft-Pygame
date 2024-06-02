@@ -1,5 +1,6 @@
 import pygame
 from Button import Button
+from GameIntro import play_intro
 from Gameplay import gameplay
 
 # Initialize Pygame
@@ -12,16 +13,15 @@ screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption("Main Menu")
 
 # Load images
-main_menu_BG = pygame.image.load("background.png")
-play_image = pygame.image.load("Play.png")
-exit_image = pygame.image.load("Exit.png")
+main_menu_BG = pygame.image.load("images/background.png")
+play_image = pygame.image.load("images/Play.png")
+exit_image = pygame.image.load("images/Exit.png")
 
 # Resize images
 new_width = 200
 new_height = 100
 play_image = pygame.transform.scale(play_image, (new_width, new_height))
 exit_image = pygame.transform.scale(exit_image, (new_width, new_height))
-
 main_menu_BG = pygame.transform.scale(main_menu_BG, (screen_width, screen_height))
 
 # Button positions
@@ -34,27 +34,32 @@ exit_button_y = 400
 play_button = Button(play_image, play_button_x, play_button_y)
 exit_button = Button(exit_image, exit_button_x, exit_button_y)
 
-# Main loop
+# Play video intro
+screen.fill((0, 0, 0))  # Fill screen with black before starting intro
+pygame.display.flip()
+play_intro(screen)  # Call the function to play the video intro
+
+# Main menu loop
 running = True
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            pygame.quit()
+            running = False
 
-    # Update button state para ma update tong changes sa image
+    # Update button state
     play_button.update()
     exit_button.update()
 
     # Draw everything
-    screen.blit(main_menu_BG, (0, 0)) # Kaning (0, 0) kay position na sa image
+    screen.blit(main_menu_BG, (0, 0))
     screen.blit(play_button.image, play_button.rect)
     screen.blit(exit_button.image, exit_button.rect)
     pygame.display.flip()
 
+    # Handle button clicks
     if play_button.check_clicked_button(screen):
-          gameplay()
-                    # This part is pag call ug function to display the gameplay screen
-
+        gameplay()  # Start gameplay if Play button is clicked
+        play_intro(screen)  # Play intro again after gameplay (if needed)
 
     if exit_button.check_clicked_button(screen):
         running = False

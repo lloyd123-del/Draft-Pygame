@@ -1,1 +1,62 @@
-#wala pako kabalo, pati sad si andre
+import pygame
+import cv2
+
+pygame.init()
+pygame.mixer.init()
+
+# Set up Pygame display
+screen_width = 1280
+screen_height = 720
+screen = pygame.display.set_mode((screen_width, screen_height))
+pygame.display.set_caption("Video Intro")
+
+def play_intro(screen):
+    video_path = "videos/Biodegrable_and_Non.mp4"
+    audio_path = "videos/bio_music.mp3"  # Update with your actual audio file path
+
+    # Load video
+    cap = cv2.VideoCapture(video_path)
+    if not cap.isOpened():
+        print(f"Error: Could not open video {video_path}")
+        return
+
+    # Load and play audio
+    pygame.mixer.music.load(audio_path)
+    pygame.mixer.music.play()
+
+    # Main loop for video playback
+    running = True
+    while running:
+        ret, frame = cap.read()
+
+        if ret:
+            # Convert OpenCV BGR frame to Pygame surface
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            frame = pygame.surfarray.make_surface(frame.swapaxes(0, 1))
+
+            # Scale frame to screen size
+            frame = pygame.transform.scale(frame, (screen_width, screen_height))
+
+            # Display frame
+            screen.blit(frame, (0, 0))
+            pygame.display.flip()
+
+            # Check for quit event
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+        else:
+            # Video ended
+            running = False
+
+    # Release video capture and stop audio
+    cap.release()
+    pygame.mixer.music.stop()
+
+if __name__ == "__main__":
+    play_intro(screen)
+
+    # After the intro, continue with your main menu or gameplay logic
+    # For example:
+    # pygame.quit()
+    # MainMenu()  # Replace with your main menu function call

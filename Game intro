@@ -1,62 +1,138 @@
 import pygame
 import cv2
 
-pygame.init()
-pygame.mixer.init()
+def play_video(screen, video_path, audio_path=None):
+    # Initialize audio
+    if audio_path:
+        pygame.mixer.init()
+        pygame.mixer.music.load(audio_path)
+        pygame.mixer.music.play()
 
-# Set up Pygame display
-screen_width = 1280
-screen_height = 720
-screen = pygame.display.set_mode((screen_width, screen_height))
-pygame.display.set_caption("Video Intro")
+    # Open the video file using OpenCV
+    cap = cv2.VideoCapture(video_path)
+
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    frame_duration = int(1000 / fps)  # Duration of each frame in milliseconds
+
+    clock = pygame.time.Clock()
+
+    while cap.isOpened():
+        start_time = pygame.time.get_ticks()  # Start time for frame
+
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        frame = cv2.resize(frame, (screen.get_width(), screen.get_height()))
+        frame_surface = pygame.surfarray.make_surface(frame.swapaxes(0, 1))
+        screen.blit(frame_surface, (0, 0))
+        pygame.display.update()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                cap.release()
+                if audio_path:
+                    pygame.mixer.music.stop()
+                pygame.quit()
+                return
+
+        # Ensure we maintain the frame duration
+        elapsed_time = pygame.time.get_ticks() - start_time
+        if elapsed_time < frame_duration:
+            pygame.time.delay(int(frame_duration - elapsed_time))
+
+    cap.release()
+    if audio_path:
+        pygame.mixer.music.stop()
 
 def play_intro(screen):
-    video_path = "videos/Biodegrable_and_Non.mp4"
-    audio_path = "videos/bio_music.mp3"  # Update with your actual audio file path
+    # Paths for intro video and audio
+    intro_video_path = 'videos/intro.mp4'
+    intro_audio_path = 'videos/intro_music.mp3'
+    loading_video_path = 'videos/loading.mp4'
 
-    # Load video
-    cap = cv2.VideoCapture(video_path)
-    if not cap.isOpened():
-        print(f"Error: Could not open video {video_path}")
-        return
+    # Play the intro video with audio
+    play_video(screen, intro_video_path, intro_audio_path)
 
-    # Load and play audio
-    pygame.mixer.music.load(audio_path)
+    # Transition effect (simple fade to black)
+    fade_surface = pygame.Surface((screen.get_width(), screen.get_height()))
+    fade_surface.fill((0, 0, 0))
+    for alpha in range(0, 256, 5):
+        fade_surface.set_alpha(alpha)
+        screen.blit(fade_surface, (0, 0))
+        pygame.display.update()
+        pygame.time.delay(10)
+
+    # Play the loading video
+    play_video(screen, loading_video_path)
+
+def play_main_video(screen):
+    # Paths for main video and audio
+    main_video_path = 'videos/New_video.mp4'
+    main_audio_path = 'videos/New_music.mp3'
+    skip_image_path = 'images/Skip.png'
+
+    # Load the skip button image and scale it
+    skip_image = pygame.image.load(skip_image_path)
+    skip_image = pygame.transform.scale(skip_image, (120, 50))
+    hover_skip_image = skip_image.copy()
+    hover_skip_image.fill((255, 0, 0), special_flags=pygame.BLEND_RGBA_MULT)  # Change color on hover
+
+    # Position for the skip button (bottom right corner)
+    skip_button = skip_image.get_rect(bottomright=(screen.get_width() - 10, screen.get_height() - 10))
+
+    # Play the audio
+    pygame.mixer.init()
+    pygame.mixer.music.load(main_audio_path)
     pygame.mixer.music.play()
 
-    # Main loop for video playback
-    running = True
-    while running:
+    # Open the video file using OpenCV
+    cap = cv2.VideoCapture(main_video_path)
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    frame_duration = int(1000 / fps)  # Duration of each frame in milliseconds
+
+    clock = pygame.time.Clock()
+
+    while cap.isOpened():
+        start_time = pygame.time.get_ticks()  # Start time for frame
+
         ret, frame = cap.read()
+        if not ret:
+            break
 
-        if ret:
-            # Convert OpenCV BGR frame to Pygame surface
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            frame = pygame.surfarray.make_surface(frame.swapaxes(0, 1))
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        frame = cv2.resize(frame, (screen.get_width(), screen.get_height()))
+        frame_surface = pygame.surfarray.make_surface(frame.swapaxes(0, 1))
 
-            # Scale frame to screen size
-            frame = pygame.transform.scale(frame, (screen_width, screen_height))
+        screen.blit(frame_surface, (0, 0))
 
-            # Display frame
-            screen.blit(frame, (0, 0))
-            pygame.display.flip()
-
-            # Check for quit event
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
+        # Check for hover and display the appropriate skip button
+        if skip_button.collidepoint(pygame.mouse.get_pos()):
+            screen.blit(hover_skip_image, skip_button)
         else:
-            # Video ended
-            running = False
+            screen.blit(skip_image, skip_button)
 
-    # Release video capture and stop audio
+        pygame.display.update()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                cap.release()
+                pygame.mixer.music.stop()
+                pygame.quit()
+                return
+
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if skip_button.collidepoint(event.pos):
+                    cap.release()
+                    pygame.mixer.music.stop()
+                    pygame.quit()
+                    return
+
+        # Ensure we maintain the frame duration
+        elapsed_time = pygame.time.get_ticks() - start_time
+        if elapsed_time < frame_duration:
+            pygame.time.delay(int(frame_duration - elapsed_time))
+
     cap.release()
     pygame.mixer.music.stop()
-
-if __name__ == "__main__":
-    play_intro(screen)
-
-    # After the intro, continue with your main menu or gameplay logic
-    # For example:
-    # pygame.quit()
-    # MainMenu()  # Replace with your main menu function call

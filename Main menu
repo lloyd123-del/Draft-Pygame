@@ -1,9 +1,9 @@
 import pygame
 from Button import Button
+from Gameplay import main
 from GameIntro import play_intro, play_main_video
-from Gameplay import gameplay
 
-# Initialize Pygame
+# Initialize ang Pygame
 pygame.init()
 
 # Screen dimensions
@@ -20,48 +20,67 @@ exit_image = pygame.image.load("images/Exit.png")
 # Resize images
 new_width = 200
 new_height = 100
+
 play_image = pygame.transform.scale(play_image, (new_width, new_height))
 exit_image = pygame.transform.scale(exit_image, (new_width, new_height))
 main_menu_BG = pygame.transform.scale(main_menu_BG, (screen_width, screen_height))
 
 # Button positions
-play_button_x = 200
-play_button_y = 400
-exit_button_x = 880
-exit_button_y = 400
+play_button_x = 843
+play_button_y = 321
+exit_button_x = 843
+exit_button_y = 450
 
 # Button instances
 play_button = Button(play_image, play_button_x, play_button_y)
 exit_button = Button(exit_image, exit_button_x, exit_button_y)
 
-# Play intro and loading video
-screen.fill((0, 0, 0))  # Fill screen with black before starting intro
-pygame.display.flip()
-play_intro(screen)  # Call the function to play the intro and loading video
+start_sfx = pygame.mixer.Sound('videos/click sound.mp3')
+exit_sfx = pygame.mixer.Sound('videos/click sound.mp3')
 
-# Main menu loop
+
+def fade_out(width, height):
+    speed = 5
+    black = (0, 0, 0)
+    fade_surface = pygame.Surface((width, height))
+    fade_surface.fill(black)
+
+    for alpha in range(0, 255, speed):
+        fade_surface.set_alpha(alpha)
+        screen.blit(main_menu_BG, (0, 0))  # Redraw the background
+        screen.blit(play_button.image, play_button.rect)  # Redraw the buttons
+        screen.blit(exit_button.image, exit_button.rect)
+        screen.blit(fade_surface, (0, 0))
+        pygame.display.update()
+        pygame.time.delay(30)
+
+play_intro(screen)
+
 running = True
 while running:
+
     for event in pygame.event.get():
+
         if event.type == pygame.QUIT:
             running = False
 
-    # Update button state
+        if event.type == pygame.MOUSEBUTTONDOWN:  # Button down indication sa mouse click
+            if play_button.check_clicked_button(screen):
+                start_sfx.play()
+                fade_out(screen_width, screen_height)
+                play_main_video(screen)
+                main()
+
+            if exit_button.check_clicked_button(screen):
+                exit_sfx.play()
+                running = False
+
     play_button.update()
     exit_button.update()
 
-    # Draw everything
-    screen.blit(main_menu_BG, (0, 0))
+    screen.blit(main_menu_BG, (0, 0))  # Position of the background image
     screen.blit(play_button.image, play_button.rect)
     screen.blit(exit_button.image, exit_button.rect)
-    pygame.display.flip()
-
-    # Handle button clicks
-    if play_button.check_clicked_button(screen):
-        play_main_video(screen)  # Play main video before starting gameplay
-        gameplay()  # Start gameplay if Play button is clicked
-
-    if exit_button.check_clicked_button(screen):
-        running = False
+    pygame.display.update()
 
 pygame.quit()

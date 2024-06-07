@@ -1,5 +1,6 @@
 import pygame
 import cv2
+from Gameplay import main
 
 def play_video(screen, video_path, audio_path=None):
     # Initialize audio
@@ -124,10 +125,12 @@ def play_main_video(screen):
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if skip_button.collidepoint(event.pos):
+
+                    screen_width = 1200
+                    screen_height = 700
                     cap.release()
                     pygame.mixer.music.stop()
-                    pygame.quit()
-                    return
+                    main()
 
         # Ensure we maintain the frame duration
         elapsed_time = pygame.time.get_ticks() - start_time
